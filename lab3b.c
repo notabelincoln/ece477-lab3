@@ -57,27 +57,27 @@ int main(int argc, char **argv)
 		for (i = 0; i < 8; i++)
 			digitalWrite(7 - i, (min1_load >= (4.0 / (1 << i))) ? 1 : 0);
 		// DEBUG: print cpu load and GPIO status
-		printf("1-minute load average is %.2lf\n",min1_load);
-		for (i = 0; i < 8; i++)
-			printf("GPIO %u: %u\n",i,digitalRead(i));
+		//printf("1-minute load average is %.2lf\n",min1_load);
+		//for (i = 0; i < 8; i++)
+		//	printf("GPIO %u: %u\n",i,digitalRead(i));
 
 		
 		sleep(2);
 		for (i = 0; i < 8; i++)
 			digitalWrite(7 - i, (min5_load >= (4.0 / (1 << i))) ? 1 : 0);
 		// DEBUG: print cpu load and GPIO status
-		printf("5-minute load average is %.2lf\n",min5_load);
-		for (i = 0; i < 8; i++)
-			printf("GPIO %u: %u\n",i,digitalRead(i));
+		//printf("5-minute load average is %.2lf\n",min5_load);
+		//for (i = 0; i < 8; i++)
+		//	printf("GPIO %u: %u\n",i,digitalRead(i));
 
 		sleep(2);
-		for (i = 0; i < 8; i++)
-			digitalWrite(7 - i, (min15_load >= (4.0 / (1 << i))) ? 1 : 0);
+		//for (i = 0; i < 8; i++)
+		//	digitalWrite(7 - i, (min15_load >= (4.0 / (1 << i))) ? 1 : 0);
 
 		// DEBUG: print cpu load and GPIO status
-		printf("15-minute load average is %.2lf\n",min15_load);
-		for (i = 0; i < 8; i++)
-			printf("GPIO %u: %u\n",i,digitalRead(i));
+		//printf("15-minute load average is %.2lf\n",min15_load);
+		//for (i = 0; i < 8; i++)
+		//	printf("GPIO %u: %u\n",i,digitalRead(i));
 
 
 		sleep(2);
