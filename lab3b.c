@@ -5,81 +5,66 @@
 #include "linux/gpio.h"
 #include "sys/ioctl.h"
 #include "string.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+
+#define BUFFER_SIZE 32
 
 int main(int argc, char **argv)
 {
-	unsigned int pin_mask, i;
-	
-	if (argc != 2) {
-		printf("USAGE: ./lab2a (value)\n");
-		exit(-1);
-	}
+	double cpu_load;
+	int proc_fd, proc_rd, proc_cl, i;
+	char *proc_path = "/proc/loadavg";
+	char load_str[BUFFER_SIZE];
 
-	// Check if input pin mask is valid
-	if (!(strncmp("0x",argv[1],2))) {
-		if (strlen(argv[1]) < 3) {
-			printf("ERROR: Invalid value (base 16)\n");
-			exit(-2);
-		} else {
-			for (i = 2; i < strlen(argv[1]); i++) {
-				// Check if each character is not valid hex value (between '0' & '7', 'a' & 'f', 'A' & 'F')
-				if (!(((argv[1][i] <= '9') && (argv[1][i] >= '0'))
-							|| ((argv[1][i] <= 'f') && (argv[1][i] >= 'a'))
-							|| ((argv[1][i] <= 'F') && (argv[1][i] >= 'A')))) {
-					printf("ERROR: Invalid value(base 16)\n");
-					exit(-2);
-				}
-			}
-		}
-	} else if (argv[1][0] == '0') {
-		// Check if each value is valid octal digit
-		for (i = 0; i < strlen(argv[1]); i++) {
-			if (!((argv[1][i] <= '7') && (argv[1][i] >= '0'))) {
-				printf("ERROR: Invalid pin mask (base 8)\n");
-				exit(-3);
-			}
-		}
-	} else {
-		// Check if each value is valid decimal digit
-		for (i = 0; i < strlen(argv[1]); i++) {
-			if (!((argv[1][i] <= '9') && (argv[1][i] >= '0'))) {
-				printf("ERROR: Invalid pin mask (base 10)\n");
-				exit(-3);
-			}
-		}
-	}
-
-
-	// Determine base of input pin mask
-	if (argv[1][0] == '0') {
-		if ((argv[1][1] == 'x') || (argv[1][1] == 'X'))
-			pin_mask = strtol(argv[1], NULL, 16);
-		else
-			pin_mask = strtol(argv[1], NULL, 8);
-	} else {
-		pin_mask = atoi(argv[1]);
-	}
-
-	// Check if value is in valid range
-	if (pin_mask > 0xFF) {
-		printf("ERROR: value exceeds valid input\n");
-		exit(-4);
-	}
-
-	// Set up GPIO
+	// Set up GPIOs as outputs
 	wiringPiSetup();
-
-	// Set each GPIO high or low depending on the logical result
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++)
 		pinMode(i, OUTPUT);
-		if (pin_mask & (1 << i))
-			digitalWrite(i, 1);
-		else
-			digitalWrite(i, 0);
+
+	while(1) {
+		// Reset buffer so useless/outdated info is purged
+		memset(load_str, 0, BUFFER_SIZE);
+
+		// Open file for reading CPU load
+		proc_fd = open(proc_path, O_RDONLY);
+		if (proc_fd < 0) {
+			fprintf(stderr,"ERROR: cannot open file!  %s\n",strerror(errno));
+			exit(errno);
+		}
+
+		// Read the contents of file into buffer
+		proc_rd = read(proc_fd, load_str, BUFFER_SIZE-1);
+		if (proc_rd < 0) {
+			fprintf(stderr,"ERROR: cannot read file!  %s\n",strerror(errno));
+			exit(errno);
+		}
+
+		// Read minute-load-average into variable
+		sscanf(load_str,"%lf",&cpu_load);
+		
+
+		// Close file
+		proc_cl = close(proc_fd);
+		if (proc_cl < 0) {
+			fprintf(stderr,"ERROR: cannot close file!  %s\n",strerror(errno));
+			exit(errno);
+		}
+
+		// Write the appropriate output to the pins
+		for (i = 0; i < 8; i++)
+			digitalWrite(7 - i, (cpu_load >= (4.0 / (1 << i))) ? 1 : 0);
+
+		// DEBUG: print cpu load and GPIO status
+		//printf("cpu load is %.2lf\n",cpu_load);
+		//for (i = 0; i < 8; i++)
+		//	printf("GPIO %u: %u\n",i,digitalRead(i));
+
+
+		// Update data about once a second
+		sleep(1);
 	}
-
-	// USE FOR DEBUGGING
-	//printf("pin_mask: %#4x\n",pin_mask);
-
 	return 0;
 }
