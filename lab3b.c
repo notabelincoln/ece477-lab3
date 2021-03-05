@@ -14,7 +14,7 @@
 
 int main(int argc, char **argv)
 {
-	double cpu_load;
+	double min1_load, min5_load, min15_load;
 	int proc_fd, proc_rd, proc_cl, i;
 	char *proc_path = "/proc/loadavg";
 	char load_str[BUFFER_SIZE];
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 		}
 
 		// Read minute-load-average into variable
-		sscanf(load_str,"%lf",&cpu_load);
+		sscanf(load_str,"%lf %lf %lf",&min1_load,&min5_load,&min15_load);
 		
 
 		// Close file
@@ -55,15 +55,36 @@ int main(int argc, char **argv)
 
 		// Write the appropriate output to the pins
 		for (i = 0; i < 8; i++)
-			digitalWrite(7 - i, (cpu_load >= (4.0 / (1 << i))) ? 1 : 0);
+			digitalWrite(7 - i, (min1_load >= (4.0 / (1 << i))) ? 1 : 0);
+		// DEBUG: print cpu load and GPIO status
+		printf("1-minute load average is %.2lf\n",min1_load);
+		for (i = 0; i < 8; i++)
+			printf("GPIO %u: %u\n",i,digitalRead(i));
+
+		
+		sleep(2);
+		for (i = 0; i < 8; i++)
+			digitalWrite(7 - i, (min5_load >= (4.0 / (1 << i))) ? 1 : 0);
+		// DEBUG: print cpu load and GPIO status
+		printf("5-minute load average is %.2lf\n",min5_load);
+		for (i = 0; i < 8; i++)
+			printf("GPIO %u: %u\n",i,digitalRead(i));
+
+		sleep(2);
+		for (i = 0; i < 8; i++)
+			digitalWrite(7 - i, (min15_load >= (4.0 / (1 << i))) ? 1 : 0);
 
 		// DEBUG: print cpu load and GPIO status
-		//printf("cpu load is %.2lf\n",cpu_load);
-		//for (i = 0; i < 8; i++)
-		//	printf("GPIO %u: %u\n",i,digitalRead(i));
+		printf("15-minute load average is %.2lf\n",min15_load);
+		for (i = 0; i < 8; i++)
+			printf("GPIO %u: %u\n",i,digitalRead(i));
 
 
-		// Update data about once a second
+		sleep(2);
+		for (i = 0; i < 8; i++)
+			digitalWrite(7 - i, 0);
+
+		// Update data about once every 7 seconds
 		sleep(1);
 	}
 	return 0;
