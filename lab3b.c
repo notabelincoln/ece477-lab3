@@ -15,6 +15,7 @@ int main(int argc, char **argv)
 	int proc_fd, proc_rd, proc_cl, i, debug_flag;
 	char *proc_path = "/proc/loadavg";
 	char load_str[BUFFER_SIZE];
+	int min1_vals[8], min5_vals[8];
 
 	// Set up GPIOs as outputs
 	wiringPiSetup();
@@ -60,9 +61,8 @@ int main(int argc, char **argv)
 			digitalWrite(7 - i, (min1_load >= (4.0 / (1 << i))) ? 1 : 0);
 		// DEBUG: print 1-minute cpu load average and GPIO status
 		if (debug_flag) {
-			printf("1-minute load average is %.2lf\n",min1_load);
 			for (i = 0; i < 8; i++)
-				printf("GPIO %u: %u\n",i,digitalRead(i));
+				min1_vals[i] = digitalRead(i);
 		}
 		
 		sleep(2);
@@ -70,9 +70,8 @@ int main(int argc, char **argv)
 			digitalWrite(7 - i, (min5_load >= (4.0 / (1 << i))) ? 1 : 0);
 		// DEBUG: print 5-minute cpu load average and GPIO status
 		if (debug_flag) {
-			printf("5-minute load average is %.2lf\n",min5_load);
 			for (i = 0; i < 8; i++)
-				printf("GPIO %u: %u\n",i,digitalRead(i));
+				min5_vals[i] = digitalRead(i);
 		}
 
 		sleep(2);
@@ -80,9 +79,12 @@ int main(int argc, char **argv)
 			digitalWrite(7 - i, (min15_load >= (4.0 / (1 << i))) ? 1 : 0);
 		// DEBUG: print cpu load and GPIO status
 		if (debug_flag) {
-			printf("15-minute load average is %.2lf\n",min15_load);
+			printf("%s %.2lf | %.2lf | %.2lf\n",
+					"CPU Load [1m | 5m | 15m]:",
+					min1_load, min5_load, min15_load);
 			for (i = 0; i < 8; i++)
-				printf("GPIO %u: %u\n",i,digitalRead(i));
+				printf("GPIO %u: %u | %u | %u\n",
+						i,min1_vals[i],min5_vals[i],digitalRead(i));
 		}
 
 		sleep(2);
