@@ -45,8 +45,6 @@ int main(int argc, char **argv)
 		// Read minute-load-average into variable
 		sscanf(load_str,"%lf",&cpu_load);
 		
-		// DEBUG: print cpu load
-		// printf("cpu load is %.2lf\n",cpu_load);
 
 		// Close file
 		proc_cl = close(proc_fd);
@@ -59,16 +57,14 @@ int main(int argc, char **argv)
 		for (i = 0; i < 8; i++)
 			digitalWrite(7 - i, (cpu_load >= (4.0 / (1 << i))) ? 1 : 0);
 
+		// DEBUG: print cpu load and GPIO status
+		//printf("cpu load is %.2lf\n",cpu_load);
+		//for (i = 0; i < 8; i++)
+		//	printf("GPIO %u: %u\n",i,digitalRead(i));
+
+
 		// Update data about once a second
 		sleep(1);
 	}
-	
-	// Set up GPIO
-	
-	// Set each GPIO high or low depending on the logical result
-
-	// USE FOR DEBUGGING
-	//printf("pin_mask: %#4x\n",pin_mask);
-
 	return 0;
 }
