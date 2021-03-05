@@ -15,7 +15,7 @@
 int main(int argc, char **argv)
 {
 	double cpu_load;
-	int proc_fd, proc_rd, proc_cl, i;
+	int proc_fd, proc_rd, proc_cl, i, debug_flag;
 	char *proc_path = "/proc/loadavg";
 	char load_str[BUFFER_SIZE];
 
@@ -23,6 +23,11 @@ int main(int argc, char **argv)
 	wiringPiSetup();
 	for (i = 0; i < 8; i++)
 		pinMode(i, OUTPUT);
+
+	if (argc >= 2)
+		debug_flag = !(strcmp("debug",argv[1]));
+	else
+		debug_flag = 0;
 
 	while(1) {
 		// Reset buffer so useless/outdated info is purged
@@ -58,10 +63,11 @@ int main(int argc, char **argv)
 			digitalWrite(7 - i, (cpu_load >= (4.0 / (1 << i))) ? 1 : 0);
 
 		// DEBUG: print cpu load and GPIO status
-		//printf("cpu load is %.2lf\n",cpu_load);
-		//for (i = 0; i < 8; i++)
-		//	printf("GPIO %u: %u\n",i,digitalRead(i));
-
+		if (debug_flag) {
+			printf("1-minute load average is %.2lf\n",cpu_load);
+			for (i = 0; i < 8; i++)
+				printf("GPIO %u: %u\n",i,digitalRead(i));
+		}
 
 		// Update data about once a second
 		sleep(1);
